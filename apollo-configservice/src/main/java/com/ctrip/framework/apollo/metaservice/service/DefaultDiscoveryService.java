@@ -28,6 +28,7 @@ public class DefaultDiscoveryService implements DiscoveryService {
 
   @Override
   public List<ServiceDTO> getServiceInstances(String serviceId) {
+    // 根据serviceId  到eureka中找对应的url, eureka 存放了config service url 和 admin service url
     Application application = eurekaClient.getApplication(serviceId);
     if (application == null || CollectionUtils.isEmpty(application.getInstances())) {
       Tracer.logEvent("Apollo.Discovery.NotFound", serviceId);

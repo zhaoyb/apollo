@@ -58,15 +58,19 @@ public class ConfigServiceLocator {
 
   private void initConfigServices() {
     // get from run time configurations
+    // 先从本地配置文件中获取
     List<ServiceDTO> customizedConfigServices = getCustomizedConfigService();
 
+    // 如果本地环境有配置， 则使用本地配置
     if (customizedConfigServices != null) {
       setConfigServices(customizedConfigServices);
       return;
     }
 
     // update from meta service
+    // 从meta service 获取 config service 配置
     this.tryUpdateConfigServices();
+    // 定时获取
     this.schedulePeriodicRefresh();
   }
 
@@ -127,6 +131,11 @@ public class ConfigServiceLocator {
     return false;
   }
 
+  /**
+   *
+   * 定时更新 config serveice
+   *
+   */
   private void schedulePeriodicRefresh() {
     this.m_executorService.scheduleAtFixedRate(
         new Runnable() {
@@ -140,10 +149,17 @@ public class ConfigServiceLocator {
         m_configUtil.getRefreshIntervalTimeUnit());
   }
 
+  /**
+   *
+   * 更新config server url
+   *
+   */
   private synchronized void updateConfigServices() {
+    // meta url
     String url = assembleMetaServiceUrl();
 
     HttpRequest request = new HttpRequest(url);
+    // 重试次数
     int maxRetries = 2;
     Throwable exception = null;
 
@@ -158,6 +174,7 @@ public class ConfigServiceLocator {
           logConfigService("Empty response!");
           continue;
         }
+        // 设置 config service
         setConfigServices(services);
         return;
       } catch (Throwable ex) {
@@ -180,7 +197,9 @@ public class ConfigServiceLocator {
   }
 
   private void setConfigServices(List<ServiceDTO> services) {
+    // 设置config services
     m_configServices.set(services);
+    // 打印日志
     logConfigServices(services);
   }
 

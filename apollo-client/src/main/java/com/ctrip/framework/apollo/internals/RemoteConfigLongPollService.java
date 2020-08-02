@@ -93,6 +93,7 @@ public class RemoteConfigLongPollService {
   public boolean submit(String namespace, RemoteConfigRepository remoteConfigRepository) {
     boolean added = m_longPollNamespaces.put(namespace, remoteConfigRepository);
     m_notifications.putIfAbsent(namespace, INIT_NOTIFICATION_ID);
+    // m_longPollStarted 原子变量，表示是否已经启动，默认false
     if (!m_longPollStarted.get()) {
       startLongPolling();
     }
@@ -140,7 +141,9 @@ public class RemoteConfigLongPollService {
   private void doLongPollingRefresh(String appId, String cluster, String dataCenter, String secret) {
     final Random random = new Random();
     ServiceDTO lastServiceDto = null;
+    // 这是在一个while循环中， 会不断的发起请求
     while (!m_longPollingStopped.get() && !Thread.currentThread().isInterrupted()) {
+      // 限流
       if (!m_longPollRateLimiter.tryAcquire(5, TimeUnit.SECONDS)) {
         //wait at most 5 seconds
         try {
@@ -163,7 +166,9 @@ public class RemoteConfigLongPollService {
         logger.debug("Long polling from {}", url);
 
         HttpRequest request = new HttpRequest(url);
+        // 超时，默认90秒
         request.setReadTimeout(LONG_POLLING_READ_TIMEOUT);
+        // 签名
         if (!StringUtils.isBlank(secret)) {
           Map<String, String> headers = Signature.buildHttpHeaders(url, appId, secret);
           request.setHeaders(headers);
@@ -171,6 +176,7 @@ public class RemoteConfigLongPollService {
 
         transaction.addData("Url", url);
 
+        // 发起请求
         final HttpResponse<List<ApolloConfigNotification>> response =
             m_httpUtil.doGet(request, m_responseType);
 

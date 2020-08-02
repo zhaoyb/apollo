@@ -91,6 +91,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
     gson = new Gson();
     this.trySync();
     this.schedulePeriodicRefresh();
+    // http long polling， 模拟长连接
     this.scheduleLongPollingRefresh();
   }
 

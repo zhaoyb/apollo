@@ -10,6 +10,8 @@ import com.ctrip.framework.apollo.spi.ConfigRegistry;
 /**
  * Entry point for client config use
  *
+ * 客户端入口
+ *
  * @author Jason Song(song_s@ctrip.com)
  */
 public class ConfigService {
@@ -22,6 +24,7 @@ public class ConfigService {
     if (m_configManager == null) {
       synchronized (this) {
         if (m_configManager == null) {
+          // 反射获取实例
           m_configManager = ApolloInjector.getInstance(ConfigManager.class);
         }
       }

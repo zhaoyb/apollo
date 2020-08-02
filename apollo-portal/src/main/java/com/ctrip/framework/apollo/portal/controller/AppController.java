@@ -113,6 +113,7 @@ public class AppController {
 
     App createdApp = appService.createAppInLocal(app);
 
+    //  发布AppCreationEvent 事件
     publisher.publishEvent(new AppCreationEvent(createdApp));
 
     Set<String> admins = appModel.getAdmins();

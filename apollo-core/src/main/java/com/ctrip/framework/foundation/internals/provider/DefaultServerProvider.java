@@ -16,7 +16,10 @@ import org.slf4j.LoggerFactory;
 
 public class DefaultServerProvider implements ServerProvider {
   private static final Logger logger = LoggerFactory.getLogger(DefaultServerProvider.class);
+  // 下面两个配置 应该是携程公司服务端标准配置，在自己使用的时候，要替换掉
+  // linux 配置
   private static final String SERVER_PROPERTIES_LINUX = "/opt/settings/server.properties";
+  // windows 配置
   private static final String SERVER_PROPERTIES_WINDOWS = "C:/opt/settings/server.properties";
 
   private String m_env;
@@ -53,8 +56,9 @@ public class DefaultServerProvider implements ServerProvider {
           in.close();
         }
       }
-
+      // 初始化环境 ENV属性
       initEnvType();
+      // 初始化数据中心 属性
       initDataCenter();
     } catch (Throwable ex) {
       logger.error("Initialize DefaultServerProvider failed.", ex);
@@ -102,6 +106,7 @@ public class DefaultServerProvider implements ServerProvider {
 
   private void initEnvType() {
     // 1. Try to get environment from JVM system property
+    // JVM环境变量
     m_env = System.getProperty("env");
     if (!Utils.isBlank(m_env)) {
       m_env = m_env.trim();
@@ -110,6 +115,7 @@ public class DefaultServerProvider implements ServerProvider {
     }
 
     // 2. Try to get environment from OS environment variable
+    // 系统环境变量
     m_env = System.getenv("ENV");
     if (!Utils.isBlank(m_env)) {
       m_env = m_env.trim();
@@ -118,6 +124,7 @@ public class DefaultServerProvider implements ServerProvider {
     }
 
     // 3. Try to get environment from file "server.properties"
+    // 从配置文件读取
     m_env = m_serverProperties.getProperty("env");
     if (!Utils.isBlank(m_env)) {
       m_env = m_env.trim();

@@ -42,7 +42,9 @@ public class ReleaseMessageScanner implements InitializingBean {
   @Override
   public void afterPropertiesSet() throws Exception {
     databaseScanInterval = bizConfig.releaseMessageScanIntervalInMilli();
+    // 最有一条变更的ID
     maxIdScanned = loadLargestMessageId();
+    //
     executorService.scheduleWithFixedDelay((Runnable) () -> {
       Transaction transaction = Tracer.newTransaction("Apollo.ReleaseMessageScanner", "scanMessage");
       try {
@@ -73,6 +75,7 @@ public class ReleaseMessageScanner implements InitializingBean {
    */
   private void scanMessages() {
     boolean hasMoreMessages = true;
+    // 在一次扫描中，处理所有的 未通知的消息， 因为每批500条， 如果有超过500条消息，就循环处理
     while (hasMoreMessages && !Thread.currentThread().isInterrupted()) {
       hasMoreMessages = scanAndSendMessages();
     }

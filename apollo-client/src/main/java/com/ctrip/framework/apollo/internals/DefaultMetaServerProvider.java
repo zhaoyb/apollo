@@ -19,6 +19,12 @@ public class DefaultMetaServerProvider implements MetaServerProvider {
     metaServerAddress = initMetaServerAddress();
   }
 
+  /**
+   *
+   * 获取meta 地址，meta地址 可以由 系统变量，
+   *
+   * @return
+   */
   private String initMetaServerAddress() {
     // 1. Get from System Property
     String metaAddress = System.getProperty(ConfigConsts.APOLLO_META_KEY);

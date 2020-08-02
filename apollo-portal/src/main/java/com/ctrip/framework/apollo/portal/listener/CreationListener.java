@@ -38,6 +38,7 @@ public class CreationListener {
     List<Env> envs = portalSettings.getActiveEnvs();
     for (Env env : envs) {
       try {
+        // 调用admin service
         appAPI.createApp(env, appDTO);
       } catch (Throwable e) {
         logger.error("Create app failed. appId = {}, env = {})", appDTO.getAppId(), env, e);

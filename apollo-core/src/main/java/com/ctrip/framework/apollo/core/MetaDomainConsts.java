@@ -87,6 +87,7 @@ public class MetaDomainConsts {
 
     String metaAddress = null;
 
+    // 迭代所有的实现，找到meta url
     for (MetaServerProvider provider : metaServerProviders) {
       metaAddress = provider.getMetaServerAddress(env);
       if (!Strings.isNullOrEmpty(metaAddress)) {
@@ -96,6 +97,7 @@ public class MetaDomainConsts {
       }
     }
 
+    // 没有找到，用默认值
     if (Strings.isNullOrEmpty(metaAddress)) {
       // Fallback to default meta address
       metaAddress = DEFAULT_META_URL;
@@ -104,10 +106,13 @@ public class MetaDomainConsts {
           metaAddress, env);
     }
 
+    // 放入缓存
     metaServerAddressCache.put(env, metaAddress.trim());
   }
 
   private static List<MetaServerProvider> initMetaServerProviders() {
+    // meta server 有多个实现，这里我们可以自定义实现方式
+
     Iterator<MetaServerProvider> metaServerProviderIterator = ServiceBootstrap.loadAll(MetaServerProvider.class);
 
     List<MetaServerProvider> metaServerProviders = Lists.newArrayList(metaServerProviderIterator);
@@ -140,6 +145,7 @@ public class MetaDomainConsts {
         schedulePeriodicRefresh();
       }
       updateMetaServerAddresses(metaServerAddresses);
+      // 获取一个能用的url
       metaAddressSelected = selectedMetaServerAddressCache.get(metaServerAddresses);
     }
 
@@ -155,6 +161,7 @@ public class MetaDomainConsts {
     try {
       List<String> metaServers = Lists.newArrayList(metaServerAddresses.split(","));
       // random load balancing
+      // 这里会打散，如果有多个地址，也算是做了负载了
       Collections.shuffle(metaServers);
 
       boolean serverAvailable = false;
@@ -162,11 +169,13 @@ public class MetaDomainConsts {
       for (String address : metaServers) {
         address = address.trim();
         //check whether /services/config is accessible
+        // 检测可用性
         if (NetUtil.pingUrl(address + "/services/config")) {
           // select the first available meta server
           selectedMetaServerAddressCache.put(metaServerAddresses, address);
           serverAvailable = true;
           logger.debug("Selected meta server address {} for {}", address, metaServerAddresses);
+          // 注意，这里不会全部检查， 只返回一个能用的就行
           break;
         }
       }
@@ -190,6 +199,12 @@ public class MetaDomainConsts {
     }
   }
 
+
+  /**
+   *
+   * 定时刷新 Meta 可用列表
+   *
+   */
   private static void schedulePeriodicRefresh() {
     ScheduledExecutorService scheduledExecutorService =
         Executors.newScheduledThreadPool(1, ApolloThreadFactory.create("MetaServiceLocator", true));

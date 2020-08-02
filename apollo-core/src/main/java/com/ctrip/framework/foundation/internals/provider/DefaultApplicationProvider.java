@@ -49,7 +49,9 @@ public class DefaultApplicationProvider implements ApplicationProvider {
         }
       }
 
+      // 初始化appid
       initAppId();
+      // 初始化key
       initAccessKey();
     } catch (Throwable ex) {
       logger.error("Initialize DefaultApplicationProvider failed.", ex);
