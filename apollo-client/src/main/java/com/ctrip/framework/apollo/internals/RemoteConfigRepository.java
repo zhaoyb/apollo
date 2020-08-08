@@ -169,6 +169,7 @@ public class RemoteConfigRepository extends AbstractConfigRepository {
     }
 
     private ApolloConfig loadApolloConfig() {
+        // 限流
         if (!m_loadConfigRateLimiter.tryAcquire(5, TimeUnit.SECONDS)) {
             //wait at most 5 seconds
             try {

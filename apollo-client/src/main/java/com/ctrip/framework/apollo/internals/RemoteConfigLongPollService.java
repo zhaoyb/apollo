@@ -156,11 +156,14 @@ public class RemoteConfigLongPollService {
             Transaction transaction = Tracer.newTransaction("Apollo.ConfigService", "pollNotification");
             String url = null;
             try {
+                // 随机选择一个 config server
                 if (lastServiceDto == null) {
+
                     List<ServiceDTO> configServices = getConfigServices();
                     lastServiceDto = configServices.get(random.nextInt(configServices.size()));
                 }
 
+                // 组装url
                 url =
                         assembleLongPollRefreshUrl(lastServiceDto.getHomepageUrl(), appId, cluster, dataCenter,
                                                    m_notifications);
@@ -182,15 +185,18 @@ public class RemoteConfigLongPollService {
                 final HttpResponse<List<ApolloConfigNotification>> response =
                         m_httpUtil.doGet(request, m_responseType);
 
+                // 请求返回， 返回200其实表示的是有变化，下面304表示没有变化
                 logger.debug("Long polling response: {}, url: {}", response.getStatusCode(), url);
                 if (response.getStatusCode() == 200 && response.getBody() != null) {
                     updateNotifications(response.getBody());
                     updateRemoteNotifications(response.getBody());
                     transaction.addData("Result", response.getBody().toString());
+                    // 有变化，去通知
                     notify(lastServiceDto, response.getBody());
                 }
 
                 //try to load balance
+                //  如果服务端没有变化，则随机选择一个config service用于下次请求
                 if (response.getStatusCode() == 304 && random.nextBoolean()) {
                     lastServiceDto = null;
                 }
@@ -222,6 +228,7 @@ public class RemoteConfigLongPollService {
             return;
         }
         for (ApolloConfigNotification notification : notifications) {
+            // 表示哪个namespaceName 有变化
             String namespaceName = notification.getNamespaceName();
             //create a new list to avoid ConcurrentModificationException
             List<RemoteConfigRepository> toBeNotified =
@@ -284,6 +291,18 @@ public class RemoteConfigLongPollService {
         return STRING_JOINER.join(m_longPollNamespaces.keySet());
     }
 
+    /**
+     *
+     * 组装长链接 URL
+     *
+     *
+     * @param uri
+     * @param appId
+     * @param cluster
+     * @param dataCenter
+     * @param notificationsMap
+     * @return
+     */
     String assembleLongPollRefreshUrl(String uri, String appId, String cluster, String dataCenter,
                                       Map<String, Long> notificationsMap) {
         Map<String, String> queryParams = Maps.newHashMap();

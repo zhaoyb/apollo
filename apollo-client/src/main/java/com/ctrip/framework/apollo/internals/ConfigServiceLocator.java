@@ -56,9 +56,14 @@ public class ConfigServiceLocator {
     initConfigServices();
   }
 
+  /**
+   *
+   * 获取config server 地址
+   *
+   */
   private void initConfigServices() {
     // get from run time configurations
-    // 先从本地配置文件中获取
+    // 如果有指定，从指定的变量中获取config server
     List<ServiceDTO> customizedConfigServices = getCustomizedConfigService();
 
     // 如果本地环境有配置， 则使用本地配置
@@ -70,7 +75,7 @@ public class ConfigServiceLocator {
     // update from meta service
     // 从meta service 获取 config service 配置
     this.tryUpdateConfigServices();
-    // 定时获取
+    // 定期更新config server地址
     this.schedulePeriodicRefresh();
   }
 
@@ -152,6 +157,7 @@ public class ConfigServiceLocator {
   /**
    *
    * 更新config server url
+   * 从meta server中获取config server
    *
    */
   private synchronized void updateConfigServices() {
